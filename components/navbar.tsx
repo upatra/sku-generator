@@ -14,7 +14,8 @@ export default function Navbar() {
   function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
   }
-  const { user } = useUser()
+  // const { user } = false
+  const user = false
   return (
     <>
       <Disclosure as="nav" className="bg-gray-800">
@@ -53,53 +54,6 @@ export default function Navbar() {
                       <span className="sr-only">View notifications</span>
                       <BellIcon className="h-6 w-6" aria-hidden="true" />
                     </button>
-
-                    {/* Profile dropdown */}
-                    <Menu as="div" className="ml-3 relative">
-                      {user && (
-                        <div>
-                          <Menu.Button className="max-w-xs bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
-                            <span className="sr-only">Open user menu</span>
-                            <div className="h-8 w-8 relative">
-                              <Image
-                                src={String(user.picture)}
-                                alt=""
-                                width="10"
-                                layout="fill"
-                                className="rounded-full"
-                              />
-                            </div>
-                          </Menu.Button>
-                        </div>
-                      )}
-                      <Transition
-                        as={Fragment}
-                        enter="transition ease-out duration-100"
-                        enterFrom="transform opacity-0 scale-95"
-                        enterTo="transform opacity-100 scale-100"
-                        leave="transition ease-in duration-75"
-                        leaveFrom="transform opacity-100 scale-100"
-                        leaveTo="transform opacity-0 scale-95"
-                      >
-                        <Menu.Items className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                          {userNavigation.map((item) => (
-                            <Menu.Item key={item.name}>
-                              {({ active }) => (
-                                <a
-                                  href={item.href}
-                                  className={classNames(
-                                    active ? 'bg-gray-100' : '',
-                                    'block px-4 py-2 text-sm text-gray-700'
-                                  )}
-                                >
-                                  {item.name}
-                                </a>
-                              )}
-                            </Menu.Item>
-                          ))}
-                        </Menu.Items>
-                      </Transition>
-                    </Menu>
                   </div>
                 </div>
                 <div className="-mr-2 flex md:hidden">
@@ -134,47 +88,6 @@ export default function Navbar() {
                     {item.name}
                   </Disclosure.Button>
                 ))}
-              </div>
-              <div className="pt-4 pb-3 border-t border-gray-700">
-                {user && (
-                  <div className="flex items-center px-5">
-                    <div className="flex-shrink-0 h-10 w-10 relative">
-                      <Image
-                        src={String(user.picture)}
-                        alt=""
-                        layout="fill"
-                        className="rounded-full"
-                      />
-                    </div>
-                    <div className="ml-3">
-                      <div className="text-base font-medium leading-none text-white">
-                        {user.nickname}
-                      </div>
-                      <div className="text-sm font-medium leading-none text-gray-400">
-                        {user.email}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="ml-auto bg-gray-800 flex-shrink-0 p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-                    >
-                      <span className="sr-only">View notifications</span>
-                      <BellIcon className="h-6 w-6" aria-hidden="true" />
-                    </button>
-                  </div>
-                )}
-                <div className="mt-3 px-2 space-y-1">
-                  {userNavigation.map((item) => (
-                    <Disclosure.Button
-                      key={item.name}
-                      as="a"
-                      href={item.href}
-                      className="block px-3 py-2 rounded-md text-base font-medium text-gray-400 hover:text-white hover:bg-gray-700"
-                    >
-                      {item.name}
-                    </Disclosure.Button>
-                  ))}
-                </div>
               </div>
             </Disclosure.Panel>
           </>
