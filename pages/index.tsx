@@ -1,23 +1,40 @@
+import Badge from '@/components/badge'
 import Layout from '@/components/layout'
+import { COLOR, getDefaultColors } from '@/lib/default'
+import React, { useState } from 'react'
 
 export default function Page() {
-  const handleSubmit = async (event: any) => {
-    // Stop the form from submitting and refreshing the page.
-    event.preventDefault()
+  const DEFAULT_COLORS = getDefaultColors()
+  const [colors, setColors]: [COLOR[], any] = React.useState([])
 
-    // Get data from the form.
-    // const data = {
-    //   first: event.target.first.value,
-    //   last: event.target.last.value,
-    // }
+  const handleSubmit = async (event: any) => {
+    event.preventDefault()
 
     const formData = {
       productName: event.target.productName.value,
       productSku: event.target.productSku.value,
       colorsEnabled: event.target.colorsEnabled.checked,
+      colors: colors,
     }
-
     console.log(formData)
+  }
+
+  const useDefaultColors = () => {
+    setColors(DEFAULT_COLORS)
+  }
+
+  const removeMe = (array: any, id: any) => {
+    setColors(array.filter((value: any, index: any) => index !== id))
+  }
+
+  const addCustomColor = () => {
+    setColors([
+      ...colors,
+      {
+        colorName: (document.getElementById('color-name') as any).value,
+        colorCode: (document.getElementById('color-code') as any).value,
+      },
+    ])
   }
 
   return (
@@ -98,18 +115,27 @@ export default function Page() {
                   <button
                     type="button"
                     className="ml-3 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    onClick={useDefaultColors}
                   >
                     Use default
-                  </button>
-                  <button
-                    type="button"
-                    className="ml-3 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Add color
                   </button>
                 </div>
               </div>
             </div>
+
+            <div className="mt-6">
+              {colors.map((color: any, index, array) => (
+                <Badge
+                  key={index}
+                  id={index}
+                  array={array}
+                  name={color.colorName}
+                  code={color.colorCode}
+                  removeMe={removeMe}
+                ></Badge>
+              ))}
+            </div>
+
             <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
               <div className="sm:col-span-4">
                 <label
@@ -151,9 +177,10 @@ export default function Page() {
                 </label>
                 <button
                   type="button"
-                  className="mt-1 w-full justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="mt-1 w-full justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  onClick={addCustomColor}
                 >
-                  Remove
+                  Add
                 </button>
               </div>
             </div>
