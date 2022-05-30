@@ -1,11 +1,13 @@
 import Badge from '@/components/badge'
 import Layout from '@/components/layout'
-import { COLOR, getDefaultColors } from '@/lib/default'
+import { COLOR, SET, getDefaultColors } from '@/lib/default'
 import React, { useState } from 'react'
 
 export default function Page() {
   const DEFAULT_COLORS = getDefaultColors()
   const [colors, setColors]: [COLOR[], any] = React.useState([])
+  // const [sets, setSets]: [SET[], any] = React.useState([])
+  // const [sizes, setSizes]: [[], any] = React.useState([])
 
   const handleSubmit = async (event: any) => {
     event.preventDefault()
@@ -16,15 +18,12 @@ export default function Page() {
       colorsEnabled: event.target.colorsEnabled.checked,
       colors: colors,
     }
+
     console.log(formData)
   }
 
   const useDefaultColors = () => {
     setColors(DEFAULT_COLORS)
-  }
-
-  const removeMe = (array: any, id: any) => {
-    setColors(array.filter((value: any, index: any) => index !== id))
   }
 
   const addCustomColor = () => {
@@ -35,6 +34,10 @@ export default function Page() {
         colorCode: (document.getElementById('color-code') as any).value,
       },
     ])
+  }
+
+  const removeColor = (array: any, id: any) => {
+    setColors(array.filter((value: any, index: any) => index !== id))
   }
 
   return (
@@ -131,7 +134,7 @@ export default function Page() {
                   array={array}
                   name={color.colorName}
                   code={color.colorCode}
-                  removeMe={removeMe}
+                  removeMe={removeColor}
                 ></Badge>
               ))}
             </div>

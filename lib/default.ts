@@ -3,6 +3,11 @@ export interface COLOR {
   colorCode: string
 }
 
+export interface SET {
+  setName: string
+  setCode: string
+}
+
 export const getDefaultColors = () => {
   const colorName = [
     'Black',
