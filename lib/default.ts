@@ -1,14 +1,6 @@
-export interface COLOR {
-  colorName: string
-  colorCode: string
-}
+import { Variant } from 'models'
 
-export interface SET {
-  setName: string
-  setCode: string
-}
-
-export const getDefaultColors = () => {
+export const getDefaultColors = (): Variant[] => {
   const colorName = [
     'Black',
     'Blue',
@@ -133,12 +125,20 @@ export const getDefaultColors = () => {
     'RGD',
   ]
 
-  const result: COLOR[] = []
+  const result: Variant[] = []
   for (let i = 0; i < colorName.length; i++) {
     result.push({
-      colorName: colorName[i],
-      colorCode: colorCode[i],
+      variantName: colorName[i],
+      variantCode: colorCode[i],
     })
   }
   return result
+}
+
+export const getDefaultSets = (): Variant[] => {
+  return []
+}
+
+export const getDefaultSizes = (): Variant[] => {
+  return []
 }

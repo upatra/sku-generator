@@ -1,354 +1,201 @@
-import Badge from '@/components/badge'
+import React, { useRef, useMemo, useState } from 'react'
+import { isEmpty } from 'lodash'
+
+import {
+  ProductFormRef,
+  VariantFormRef,
+  Variant,
+  Product,
+  SkuGenerator,
+} from '@/models'
 import Layout from '@/components/layout'
-import { COLOR, SET, getDefaultColors } from '@/lib/default'
-import React, { useState } from 'react'
+import ProductForm from '@/components/form/product-form'
+import VariantForm from '@/components/form/variant-form'
+import SkuTable from '@/components/sku-table'
+import {
+  getDefaultColors,
+  getDefaultSets,
+  getDefaultSizes,
+} from '@/lib/default'
 
 export default function Page() {
-  const DEFAULT_COLORS = getDefaultColors()
-  const [colors, setColors]: [COLOR[], any] = React.useState([])
-  // const [sets, setSets]: [SET[], any] = React.useState([])
-  // const [sizes, setSizes]: [[], any] = React.useState([])
+  const [listGeneratedSku, setListGeneratedSku] = useState<SkuGenerator[]>([])
+  const productRef = useRef<ProductFormRef>(null)
+  const colorRef = useRef<VariantFormRef>(null)
+  const setRef = useRef<VariantFormRef>(null)
+  const sizeRef = useRef<VariantFormRef>(null)
 
-  const handleSubmit = async (event: any) => {
+  const defaultColors = useMemo<Variant[]>(() => getDefaultColors(), [])
+  const defaultSets = useMemo<Variant[]>(() => getDefaultSets(), [])
+  const defaultSizes = useMemo<Variant[]>(() => getDefaultSizes(), [])
+
+  const onGenerateSku = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
 
-    const formData = {
-      productName: event.target.productName.value,
-      productSku: event.target.productSku.value,
-      colorsEnabled: event.target.colorsEnabled.checked,
-      colors: colors,
+    const isValid = productRef.current ? productRef.current.isValid() : false
+    const product: Product | null = productRef.current
+      ? productRef.current.getProduct()
+      : null
+    const colors: Variant[] = colorRef.current
+      ? colorRef.current.getVariants()
+      : []
+    const sets: Variant[] = setRef.current ? setRef.current.getVariants() : []
+    const sizes: Variant[] = sizeRef.current
+      ? sizeRef.current.getVariants()
+      : []
+
+    if (isValid && product) {
+      const listSku: SkuGenerator[] = []
+      colors.forEach((color) => {
+        const skuGenerator: SkuGenerator = {}
+        skuGenerator.productName = product.productName
+        skuGenerator.productSku = product.productSku
+        skuGenerator.colorCode = color.variantCode
+        skuGenerator.colorName = color.variantName
+
+        sets.forEach((set) => {
+          skuGenerator.setName = set.variantName
+          skuGenerator.setCode = set.variantCode
+
+          sizes.forEach((size) => {
+            skuGenerator.size = size.variantName
+            skuGenerator.skuByCode = generateSkuByCode(
+              product.productName,
+              product.productSku,
+              color.variantCode,
+              set.variantCode,
+              size.variantName
+            )
+            skuGenerator.skuByName = generateSkuByName(
+              product.productName,
+              product.productSku,
+              color.variantName,
+              set.variantName,
+              size.variantName
+            )
+            listSku.push(skuGenerator)
+          })
+        })
+      })
+
+      setListGeneratedSku(listSku)
+    }
+  }
+
+  const generateSkuByCode = (
+    productName: string,
+    productSku: string,
+    colorCode?: string,
+    setCode?: string,
+    size?: string
+  ) => {
+    let skuByCode = `${productName}_${productSku}`
+
+    if (!isEmpty(colorCode)) {
+      skuByCode = skuByCode.concat(`_${colorCode}`)
     }
 
-    console.log(formData)
+    if (!isEmpty(setCode)) {
+      skuByCode = skuByCode.concat(`_${setCode}`)
+    }
+
+    if (!isEmpty(size)) {
+      skuByCode = skuByCode.concat(`_${size}`)
+    }
+
+    return skuByCode
   }
 
-  const useDefaultColors = () => {
-    setColors(DEFAULT_COLORS)
+  const generateSkuByName = (
+    productName: string,
+    productSku: string,
+    colorName?: string,
+    setName?: string,
+    size?: string
+  ) => {
+    let skuByName = `${productName}_${productSku}`
+
+    if (!isEmpty(colorName)) {
+      skuByName = skuByName.concat(`_${colorName}`)
+    }
+
+    if (!isEmpty(setName)) {
+      skuByName = skuByName.concat(`_${setName}`)
+    }
+
+    if (!isEmpty(size)) {
+      skuByName = skuByName.concat(`_${size}`)
+    }
+
+    return skuByName
   }
 
-  const addCustomColor = () => {
-    setColors([
-      ...colors,
-      {
-        colorName: (document.getElementById('color-name') as any).value,
-        colorCode: (document.getElementById('color-code') as any).value,
-      },
-    ])
-  }
-
-  const removeColor = (array: any, id: any) => {
-    setColors(array.filter((value: any, index: any) => index !== id))
+  const onReset = () => {
+    if (productRef.current) productRef.current.reset()
+    if (colorRef.current) colorRef.current.reset()
+    if (setRef.current) setRef.current.reset()
+    if (sizeRef.current) sizeRef.current.reset()
   }
 
   return (
     <Layout>
-      <form
-        className="space-y-8 divide-y divide-gray-200"
-        onSubmit={handleSubmit}
-      >
+      <div className="space-y-8 divide-y divide-gray-200">
         <div className="space-y-8 divide-y divide-gray-200">
           {/* Product Basic */}
-          <div className="pt-8">
-            <div>
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Product Information
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Lorem dipsum dolor sit amet
-              </p>
-            </div>
-            <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-              <div className="sm:col-span-3">
-                <label
-                  htmlFor="product-name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Product Name
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    name="productName"
-                    id="product-name"
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div className="sm:col-span-3">
-                <label
-                  htmlFor="product-sku"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Product SKU
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    name="productSku"
-                    id="product-sku"
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+          <ProductForm ref={productRef} />
 
           {/* Colors */}
-          <div className="pt-8">
-            <div>
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Colors
-              </h3>
-              <div className="relative flex items-center">
-                <div className="flex items-center h-5">
-                  <input
-                    id="colors"
-                    name="colorsEnabled"
-                    type="checkbox"
-                    className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="colors" className="font-medium text-gray-700">
-                    Enable color as variant
-                  </label>
-                </div>
-                <div className="flex text-sm ml-auto">
-                  <button
-                    type="button"
-                    className="ml-3 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    onClick={useDefaultColors}
-                  >
-                    Use default
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              {colors.map((color: any, index, array) => (
-                <Badge
-                  key={index}
-                  id={index}
-                  array={array}
-                  name={color.colorName}
-                  code={color.colorCode}
-                  removeMe={removeColor}
-                ></Badge>
-              ))}
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-              <div className="sm:col-span-4">
-                <label
-                  htmlFor="color-name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Color Name
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    name="colorName[]"
-                    id="color-name"
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div className="sm:col-span-1">
-                <label
-                  htmlFor="color-code"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Color Code
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    name="colorCode[]"
-                    id="color-code"
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div className="sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700">
-                  &nbsp;
-                </label>
-                <button
-                  type="button"
-                  className="mt-1 w-full justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  onClick={addCustomColor}
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
+          <VariantForm
+            ref={colorRef}
+            defaults={defaultColors}
+            isHideVariantCode={false}
+            title="Colors"
+            inputTitleCode="Color Code"
+            inputTitleName="Color Name"
+          />
 
           {/* Sets */}
-          <div className="pt-8">
-            <div>
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Sets
-              </h3>
-              <div className="relative flex items-center">
-                <div className="flex items-center h-5">
-                  <input
-                    id="sets"
-                    name="setsEnabled"
-                    type="checkbox"
-                    className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="sets" className="font-medium text-gray-700">
-                    Enable Sets as variant
-                  </label>
-                </div>
-                <div className="flex text-sm ml-auto">
-                  <button
-                    type="button"
-                    className="ml-3 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Use default
-                  </button>
-                  <button
-                    type="button"
-                    className="ml-3 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Add Set
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-              <div className="sm:col-span-4">
-                <label
-                  htmlFor="set-name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Set Name
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    name="setName[]"
-                    id="set-name"
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div className="sm:col-span-1">
-                <label
-                  htmlFor="set-code"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Set Code
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    name="setCode[]"
-                    id="set-code"
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-
-              <div className="sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700">
-                  &nbsp;
-                </label>
-                <button
-                  type="button"
-                  className="mt-1 w-full justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-          </div>
+          <VariantForm
+            ref={setRef}
+            defaults={defaultSets}
+            isHideVariantCode={false}
+            title="Sets"
+            inputTitleCode="Set Code"
+            inputTitleName="Set Name"
+          />
 
           {/* Size */}
-          <div className="pt-8">
-            <div>
-              <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Sizes
-              </h3>
-              <div className="relative flex items-center">
-                <div className="flex items-center h-5">
-                  <input
-                    id="sizes"
-                    name="sizesEnabled"
-                    type="checkbox"
-                    className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="sizes" className="font-medium text-gray-700">
-                    Enable Sizes as variant
-                  </label>
-                </div>
-                <div className="flex text-sm ml-auto">
-                  <button
-                    type="button"
-                    className="ml-3 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Use default
-                  </button>
-                  <button
-                    type="button"
-                    className="ml-3 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Add Size
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-              <div className="sm:col-span-1 mt-1">
-                <input
-                  type="text"
-                  name="sizes[]"
-                  id="size-1"
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-              <div className="sm:col-span-1 mt-1">
-                <input
-                  type="text"
-                  name="sizes[]"
-                  id="size-1"
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-          </div>
+          <VariantForm
+            ref={sizeRef}
+            defaults={defaultSizes}
+            isHideVariantCode={true}
+            title="Sizes"
+            inputTitleCode=""
+            inputTitleName="Size"
+          />
         </div>
 
         <div className="pt-5">
           <div className="flex justify-end">
             <button
               type="button"
-              className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="mr-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              onClick={onGenerateSku}
             >
-              Cancel
+              Generate
             </button>
             <button
-              type="submit"
-              className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              type="button"
+              className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              onClick={onReset}
             >
-              Save
+              Reset
             </button>
           </div>
         </div>
-      </form>
+
+        <SkuTable data={listGeneratedSku} />
+      </div>
     </Layout>
   )
 }
