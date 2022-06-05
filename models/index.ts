@@ -3,6 +3,11 @@ export interface Variant {
   variantCode?: string
 }
 
+export interface VariantDefaultProp {
+  label: string
+  values: Variant[]
+}
+
 export interface SkuGenerator {
   productName?: string
   productSku?: string

@@ -2,14 +2,14 @@ import React, { forwardRef, useImperativeHandle } from 'react'
 import { useFormik } from 'formik'
 import { uniqBy, pick } from 'lodash'
 
-import { VariantFormRef, Variant } from 'models'
+import { VariantFormRef, Variant, VariantDefaultProp } from 'models'
 import Badge from '@/components/badge'
 
 import InputColor from './input-variant'
 
 type Props = {
   title: string
-  defaults: Variant[]
+  defaults: VariantDefaultProp[]
   isHideVariantCode: boolean
   inputTitleName: string
   inputTitleCode: string
@@ -37,9 +37,8 @@ const VariantForm = forwardRef<VariantFormRef, Props>(function ProductForm(
     setFieldValue('variants', uniqueVariants)
   }
 
-  const useDefaultVariants = () => {
-    const newVariants = [...defaults, ...values.variants]
-    onUpdateVariants(newVariants)
+  const onUseDefaultVariants = (defaultVariants: Variant[]) => {
+    onUpdateVariants(defaultVariants)
   }
 
   const onClearAll = () => {
@@ -76,13 +75,17 @@ const VariantForm = forwardRef<VariantFormRef, Props>(function ProductForm(
           </h3>
           <div className="relative flex items-center">
             <div className="flex text-sm ml-auto">
-              <button
-                type="button"
-                className="ml-3 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                onClick={useDefaultVariants}
-              >
-                Use default
-              </button>
+              {defaults.map((item: VariantDefaultProp, index: number) => (
+                <button
+                  key={`${item.label}-${index}`}
+                  type="button"
+                  className="ml-3 justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  onClick={() => onUseDefaultVariants(item.values)}
+                >
+                  {item.label}
+                </button>
+              ))}
+
               {values.variants.length > 0 && (
                 <button
                   type="button"

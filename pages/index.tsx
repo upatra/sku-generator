@@ -7,6 +7,7 @@ import {
   Variant,
   Product,
   SkuGenerator,
+  VariantDefaultProp,
 } from '@/models'
 import Layout from '@/components/layout'
 import ProductForm from '@/components/form/product-form'
@@ -28,12 +29,27 @@ export default function Page() {
   const setRef = useRef<VariantFormRef>(null)
   const sizeRef = useRef<VariantFormRef>(null)
 
-  const defaultColors = useMemo<Variant[]>(() => getDefaultColors(), [])
-  const basicColors = useMemo<Variant[]>(() => getBasicColors(), [])
-  const defaultSets = useMemo<Variant[]>(() => getDefaultSets(), [])
-  const largeSets = useMemo<Variant[]>(() => getLargeSets(), [])
-  const numerictSizes = useMemo<Variant[]>(() => getNumericSizes(), [])
-  const romanSizes = useMemo<Variant[]>(() => getRomanSizes(), [])
+  const defaultColors = useMemo<VariantDefaultProp[]>(
+    () => [
+      { label: 'Use Basic Colors', values: getBasicColors() },
+      { label: 'Use Default Colors', values: getDefaultColors() },
+    ],
+    []
+  )
+  const defaultSets = useMemo<VariantDefaultProp[]>(
+    () => [
+      { label: 'Use Large Sets', values: getLargeSets() },
+      { label: 'Use Default Sets', values: getDefaultSets() },
+    ],
+    []
+  )
+  const defaultSizes = useMemo<VariantDefaultProp[]>(
+    () => [
+      { label: 'Use Numeric Sizes', values: getNumericSizes() },
+      { label: 'Use Default Sizes', values: getRomanSizes() },
+    ],
+    []
+  )
 
   const onGenerateSku = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
@@ -51,39 +67,43 @@ export default function Page() {
       : []
 
     if (isValid && product) {
-      const listSku: SkuGenerator[] = []
-      colors.forEach((color) => {
-        const skuGenerator: SkuGenerator = {}
-        skuGenerator.productName = product.productName
-        skuGenerator.productSku = product.productSku
-        skuGenerator.colorCode = color.variantCode
-        skuGenerator.colorName = color.variantName
-
-        sets.forEach((set) => {
-          skuGenerator.setName = set.variantName
-          skuGenerator.setCode = set.variantCode
-
-          sizes.forEach((size) => {
-            skuGenerator.size = size.variantName
-            skuGenerator.skuByCode = generateSkuByCode(
-              product.productName,
-              product.productSku,
-              color.variantCode,
-              set.variantCode,
-              size.variantName
-            )
-            skuGenerator.skuByName = generateSkuByName(
-              product.productName,
-              product.productSku,
-              color.variantName,
-              set.variantName,
-              size.variantName
-            )
-            listSku.push(skuGenerator)
-          })
-        })
-      })
-
+      const listSku: SkuGenerator[] = colors
+        .map((color: Variant) => ({
+          productName: product.productName,
+          productSku: product.productSku,
+          colorCode: color.variantCode,
+          colorName: color.variantName,
+        }))
+        .flatMap((sku: SkuGenerator) =>
+          sets.map((set: Variant) => ({
+            ...sku,
+            setName: set.variantName,
+            setCode: set.variantCode,
+          }))
+        )
+        .flatMap((sku: SkuGenerator) =>
+          sizes.map((size: Variant) => ({
+            ...sku,
+            size: size.variantName,
+          }))
+        )
+        .map((sku: SkuGenerator) => ({
+          ...sku,
+          skuByCode: generateSkuByCode(
+            sku.productName ?? '',
+            sku.productSku ?? '',
+            sku.colorCode,
+            sku.setCode,
+            sku.size
+          ),
+          skuByName: generateSkuByName(
+            sku.productName ?? '',
+            sku.productSku ?? '',
+            sku.colorName,
+            sku.setName,
+            sku.size
+          ),
+        }))
       setListGeneratedSku(listSku)
     }
   }
@@ -153,7 +173,7 @@ export default function Page() {
           {/* Colors */}
           <VariantForm
             ref={colorRef}
-            defaults={basicColors}
+            defaults={defaultColors}
             isHideVariantCode={false}
             title="Colors"
             inputTitleCode="Color Code"
@@ -173,7 +193,7 @@ export default function Page() {
           {/* Size */}
           <VariantForm
             ref={sizeRef}
-            defaults={numerictSizes}
+            defaults={defaultSizes}
             isHideVariantCode={true}
             title="Sizes"
             inputTitleCode=""
