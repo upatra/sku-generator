@@ -157,6 +157,7 @@ export default function Page() {
   }
 
   const onReset = () => {
+    setListGeneratedSku([])
     if (productRef.current) productRef.current.reset()
     if (colorRef.current) colorRef.current.reset()
     if (setRef.current) setRef.current.reset()
