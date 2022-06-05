@@ -14,8 +14,11 @@ import VariantForm from '@/components/form/variant-form'
 import SkuTable from '@/components/sku-table'
 import {
   getDefaultColors,
+  getBasicColors,
   getDefaultSets,
-  getDefaultSizes,
+  getLargeSets,
+  getNumericSizes,
+  getRomanSizes,
 } from '@/lib/default'
 
 export default function Page() {
@@ -26,8 +29,11 @@ export default function Page() {
   const sizeRef = useRef<VariantFormRef>(null)
 
   const defaultColors = useMemo<Variant[]>(() => getDefaultColors(), [])
+  const basicColors = useMemo<Variant[]>(() => getBasicColors(), [])
   const defaultSets = useMemo<Variant[]>(() => getDefaultSets(), [])
-  const defaultSizes = useMemo<Variant[]>(() => getDefaultSizes(), [])
+  const largeSets = useMemo<Variant[]>(() => getLargeSets(), [])
+  const numerictSizes = useMemo<Variant[]>(() => getNumericSizes(), [])
+  const romanSizes = useMemo<Variant[]>(() => getRomanSizes(), [])
 
   const onGenerateSku = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
@@ -147,7 +153,7 @@ export default function Page() {
           {/* Colors */}
           <VariantForm
             ref={colorRef}
-            defaults={defaultColors}
+            defaults={basicColors}
             isHideVariantCode={false}
             title="Colors"
             inputTitleCode="Color Code"
@@ -167,7 +173,7 @@ export default function Page() {
           {/* Size */}
           <VariantForm
             ref={sizeRef}
-            defaults={defaultSizes}
+            defaults={numerictSizes}
             isHideVariantCode={true}
             title="Sizes"
             inputTitleCode=""

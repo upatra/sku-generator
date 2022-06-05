@@ -40,8 +40,7 @@ export const getDefaultColors = (): Variant[] => {
     'Transparent/Clear',
     'Light Grey',
     'Navy Red',
-    'Navy',
-    'Blue',
+    'Navy Blue',
     'Brown Green',
     'Army Green',
     'Apricot',
@@ -135,10 +134,94 @@ export const getDefaultColors = (): Variant[] => {
   return result
 }
 
-export const getDefaultSets = (): Variant[] => {
-  return []
+export const getBasicColors = (): Variant[] => {
+  const colorName = [
+    'Black',
+    'Blue',
+    'Brown',
+    'White',
+    'Beige',
+    'Pink',
+    'Purple',
+    'Navy',
+    'Orange',
+    'Gray/Grey',
+    'Green',
+    'Yellow',
+  ]
+  const colorCode = [
+    'BK',
+    'BL',
+    'BR',
+    'WH',
+    'BE',
+    'PK',
+    'PP',
+    'NV',
+    'OR',
+    'GY',
+    'GR',
+    'YL',
+  ]
+
+  const result: Variant[] = []
+  for (let i = 0; i < colorName.length; i++) {
+    result.push({
+      variantName: colorName[i],
+      variantCode: colorCode[i],
+    })
+  }
+  return result
 }
 
-export const getDefaultSizes = (): Variant[] => {
-  return []
+export const getDefaultSets = (): Variant[] => {
+  const setName = ['Set 1', 'Set 2', 'Set 3', 'Set 4', 'Set 5']
+  const setCode = ['SET1', 'SET2', 'SET3', 'SET4', 'SET5']
+
+  const result: Variant[] = []
+  for (let i = 0; i < setName.length; i++) {
+    result.push({
+      variantName: setName[i],
+      variantCode: setCode[i],
+    })
+  }
+  return result
+}
+
+export const getLargeSets = (): Variant[] => {
+  const setName = ['Set 10', 'Set 20', 'Set 30']
+  const setCode = ['SET10', 'SET20', 'SET30']
+
+  const result: Variant[] = []
+  for (let i = 0; i < setName.length; i++) {
+    result.push({
+      variantName: setName[i],
+      variantCode: setCode[i],
+    })
+  }
+  return result
+}
+
+export const getNumericSizes = (): Variant[] => {
+  const names = ['36', '37', '38', '39', '40', '41', '42', '43', '44', '45']
+
+  const result: Variant[] = []
+  for (let i = 0; i < names.length; i++) {
+    result.push({
+      variantName: names[i],
+    })
+  }
+  return result
+}
+
+export const getRomanSizes = (): Variant[] => {
+  const names = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+
+  const result: Variant[] = []
+  for (let i = 0; i < names.length; i++) {
+    result.push({
+      variantName: names[i],
+    })
+  }
+  return result
 }
