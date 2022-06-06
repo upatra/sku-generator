@@ -1,6 +1,7 @@
 import Badge from '@/components/badge'
 import Layout from '@/components/layout'
 import { COLOR, SET, getDefaultColors } from '@/lib/default'
+import axios from 'axios'
 import React, { useState } from 'react'
 
 export default function Page() {
@@ -8,6 +9,28 @@ export default function Page() {
   const [colors, setColors]: [COLOR[], any] = React.useState([])
   // const [sets, setSets]: [SET[], any] = React.useState([])
   // const [sizes, setSizes]: [[], any] = React.useState([])
+  const getChineseName = async (event: any) => {
+    console.log(
+      process.env.NEXT_PUBLIC_GOOGLE_TRANSLATION_API,
+      process.env.NEXT_PUBLIC_GOOGLE_API_KEY
+    )
+
+    axios
+      .post(process.env.NEXT_PUBLIC_GOOGLE_TRANSLATION_API as string, null, {
+        params: {
+          q: 'Product',
+          source: 'en',
+          target: 'zh',
+          key: process.env.NEXT_PUBLIC_GOOGLE_API_KEY as string,
+        },
+      })
+      .then(function (response) {
+        console.log(response.data.data.translations[0].translatedText)
+      })
+      .catch(function (error) {
+        console.log(error)
+      })
+  }
 
   const handleSubmit = async (event: any) => {
     event.preventDefault()
@@ -90,6 +113,33 @@ export default function Page() {
                     className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                   />
                 </div>
+              </div>
+            </div>
+            <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+              <div className="sm:col-span-3">
+                <label
+                  htmlFor="product-name"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Product Name (Chinese)
+                </label>
+                <div className="mt-1">
+                  <input
+                    type="text"
+                    name="productNameChinese"
+                    id="product-name-cn"
+                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  />
+                </div>
+              </div>
+              <div className="sm:col-span-2">
+                <button
+                  type="button"
+                  className="mt-6 mt-1 w-full justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  onClick={getChineseName}
+                >
+                  Get Chinese Name
+                </button>
               </div>
             </div>
           </div>
