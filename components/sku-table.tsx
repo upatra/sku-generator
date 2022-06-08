@@ -4,9 +4,10 @@ import { SkuGenerator } from '@/models'
 
 type Props = {
   data: SkuGenerator[]
+  isTranslation: boolean
 }
 
-const SkuTable: FC<Props> = ({ data }) => (
+const SkuTable: FC<Props> = ({ data, isTranslation }) => (
   <div className="pt-10">
     <div className="sm:flex sm:items-center">
       <div className="sm:flex-auto">
@@ -43,6 +44,14 @@ const SkuTable: FC<Props> = ({ data }) => (
                 >
                   Created SKU (Name)
                 </th>
+                {isTranslation && (
+                  <th
+                    scope="col"
+                    className="py-3.5 px-3 text-left text-sm font-semibold text-gray-900"
+                  >
+                    中文名称
+                  </th>
+                )}
                 <th
                   scope="col"
                   className="py-3.5 px-3 text-left text-sm font-semibold text-gray-900"
@@ -90,6 +99,11 @@ const SkuTable: FC<Props> = ({ data }) => (
                   <td className="whitespace-nowrap py-4 px-3 text-sm text-gray-500">
                     {item.skuByName}
                   </td>
+                  {isTranslation && (
+                    <td className="whitespace-nowrap py-4 px-3 text-sm text-gray-500">
+                      {item.skuChinese}
+                    </td>
+                  )}
                   <td className="whitespace-nowrap py-4 px-3 text-sm text-gray-500">
                     {item.colorName}
                   </td>

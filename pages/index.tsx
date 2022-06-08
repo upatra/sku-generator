@@ -24,6 +24,8 @@ import {
 
 export default function Page() {
   const [listGeneratedSku, setListGeneratedSku] = useState<SkuGenerator[]>([])
+  const [isTranslation, setIsTranslation] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const productRef = useRef<ProductFormRef>(null)
   const colorRef = useRef<VariantFormRef>(null)
   const setRef = useRef<VariantFormRef>(null)
@@ -51,8 +53,15 @@ export default function Page() {
     []
   )
 
-  const onGenerateSku = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const onGenerateSku = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
+
+    setIsLoading(true)
+    if (isTranslation) {
+      if (productRef.current) await productRef.current.translate()
+      if (colorRef.current) await colorRef.current.translate()
+    }
+    setIsLoading(false)
 
     const isValid = productRef.current ? productRef.current.isValid() : false
     const product: Product | null = productRef.current
@@ -66,13 +75,21 @@ export default function Page() {
       ? sizeRef.current.getVariants()
       : []
 
-    if (isValid && product) {
+    if (
+      isValid &&
+      product &&
+      colors.length > 0 &&
+      sizes.length > 0 &&
+      sizes.length > 0
+    ) {
       const listSku: SkuGenerator[] = colors
         .map((color: Variant) => ({
           productName: product.productName,
           productSku: product.productSku,
+          productNameCn: product.productNameCn,
           colorCode: color.variantCode,
           colorName: color.variantName,
+          colorNameCn: color.variantNameCn,
         }))
         .flatMap((sku: SkuGenerator) =>
           sets.map((set: Variant) => ({
@@ -103,9 +120,31 @@ export default function Page() {
             sku.setName,
             sku.size
           ),
+          skuChinese: isTranslation
+            ? generateSkuChinese(sku.productNameCn, sku.colorNameCn, sku.size)
+            : '',
         }))
+
       setListGeneratedSku(listSku)
     }
+  }
+
+  const generateSkuChinese = (
+    productNameCn?: string,
+    colorNameCn?: string,
+    size?: string
+  ) => {
+    let skuChinese = `${productNameCn}`
+
+    if (!isEmpty(colorNameCn)) {
+      skuChinese = skuChinese.concat(` / ${colorNameCn}`)
+    }
+
+    if (!isEmpty(size)) {
+      skuChinese = skuChinese.concat(` / ${size}`)
+    }
+
+    return skuChinese
   }
 
   const generateSkuByCode = (
@@ -158,6 +197,7 @@ export default function Page() {
 
   const onReset = () => {
     setListGeneratedSku([])
+    setIsTranslation(false)
     if (productRef.current) productRef.current.reset()
     if (colorRef.current) colorRef.current.reset()
     if (setRef.current) setRef.current.reset()
@@ -202,15 +242,58 @@ export default function Page() {
           />
         </div>
 
-        <div className="pt-5">
+        <div className="pt-5 flex items-center justify-between">
+          <div className="pt-5 flex items-center">
+            <div className="flex items-center h-5">
+              <input
+                type="checkbox"
+                className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                onChange={(e) => setIsTranslation(e.target.checked)}
+              />
+            </div>
+            <div className="ml-3 text-sm">
+              <label className="font-medium text-gray-700">
+                Translate to Chinese
+              </label>
+            </div>
+          </div>
+
           <div className="flex justify-end">
             <button
               type="button"
               className="mr-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               onClick={onGenerateSku}
+              disabled={isLoading}
             >
-              Generate
+              {isLoading ? (
+                <>
+                  <svg
+                    className="w-5 h-5 mr-3 -ml-1 text-indigo-500 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Loading...
+                </>
+              ) : (
+                'Generate'
+              )}
             </button>
+
             <button
               type="button"
               className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -221,7 +304,7 @@ export default function Page() {
           </div>
         </div>
 
-        <SkuTable data={listGeneratedSku} />
+        <SkuTable data={listGeneratedSku} isTranslation={isTranslation} />
       </div>
     </Layout>
   )

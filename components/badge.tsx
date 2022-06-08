@@ -2,10 +2,13 @@ export default function Badge(props: any) {
   const removeThisBadge = () => {
     props.removeMe(props.array, props.id)
   }
+
   return (
     <>
       <span className="inline-flex rounded-full items-center mr-1.5 py-0.5 pl-2.5 pr-1 text-sm font-medium bg-indigo-100 text-indigo-700">
         {props.name}
+        {props.name && props.subName && <span>&nbsp;|&nbsp;</span>}
+        {props.subName}
         {props.name && props.code && <span>&nbsp;|&nbsp;</span>}
         {props.code}
         <button

@@ -1,7 +1,9 @@
 import React, { forwardRef, useImperativeHandle } from 'react'
 import { useFormik } from 'formik'
+import { isEmpty } from 'lodash'
 
 import { ProductFormRef } from 'models'
+import { translateToChinese } from 'lib'
 
 import { ProductSchema } from './schema'
 
@@ -10,6 +12,7 @@ const ProductForm = forwardRef<ProductFormRef>(function ProductForm(_, ref) {
     initialValues: {
       productName: '',
       productSku: '',
+      productNameCn: '',
     },
     initialTouched: {
       productName: true,
@@ -30,16 +33,40 @@ const ProductForm = forwardRef<ProductFormRef>(function ProductForm(_, ref) {
     isValid,
     handleSubmit,
     resetForm,
+    setFieldValue,
   } = formik
+
+  const translateProductName = async () => {
+    if (!isEmpty(values.productName)) {
+      try {
+        const response = await translateToChinese(values.productName)
+        setFieldValue(
+          'productNameCn',
+          response.data.data.translations[0].translatedText
+        )
+        return Promise.resolve(true)
+      } catch (err) {
+        console.error(err)
+        return Promise.resolve(false)
+      }
+    }
+
+    return Promise.resolve(false)
+  }
 
   useImperativeHandle(ref, () => ({
     isValid: () => isValid,
     getProduct: () => {
-      return { productName: values.productName, productSku: values.productSku }
+      return {
+        productName: values.productName,
+        productSku: values.productSku,
+        productNameCn: values.productNameCn,
+      }
     },
     reset: () => {
       resetForm()
     },
+    translate: translateProductName,
   }))
 
   return (
@@ -94,6 +121,14 @@ const ProductForm = forwardRef<ProductFormRef>(function ProductForm(_, ref) {
             </div>
           </div>
         </div>
+        {!isEmpty(values.productNameCn) && (
+          <label
+            htmlFor="product-name"
+            className="mt-3 block text-sm font-medium text-gray-700"
+          >
+            Chinese: {values.productNameCn}
+          </label>
+        )}
       </div>
     </form>
   )

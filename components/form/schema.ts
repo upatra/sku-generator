@@ -5,4 +5,5 @@ import { Product } from 'models'
 export const ProductSchema: SchemaOf<Product> = object({
   productName: string().required('Please input product name'),
   productSku: string().required('Please input product sku'),
+  productNameCn: string().optional(),
 }).defined()

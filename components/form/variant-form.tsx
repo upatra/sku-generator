@@ -2,6 +2,7 @@ import React, { forwardRef, useImperativeHandle } from 'react'
 import { useFormik } from 'formik'
 import { uniqBy, pick } from 'lodash'
 
+import { translateToChinese } from 'lib'
 import { VariantFormRef, Variant, VariantDefaultProp } from 'models'
 import Badge from '@/components/badge'
 
@@ -57,6 +58,30 @@ const VariantForm = forwardRef<VariantFormRef, Props>(function ProductForm(
     )
   }
 
+  const translateListVariantNameToChinese = async () => {
+    if (values.variants.length > 0) {
+      try {
+        const results = await Promise.all(
+          values.variants.map(async (value: Variant) => {
+            const response = await translateToChinese(value.variantName ?? '')
+            value.variantNameCn =
+              response.data.data.translations[0].translatedText
+            return value
+          })
+        )
+
+        setFieldValue('variants', results)
+
+        return Promise.resolve(true)
+      } catch (err) {
+        console.error(err)
+        return Promise.resolve(false)
+      }
+    }
+
+    return Promise.resolve(false)
+  }
+
   useImperativeHandle(ref, () => ({
     getVariants: () => {
       return values.variants
@@ -64,6 +89,7 @@ const VariantForm = forwardRef<VariantFormRef, Props>(function ProductForm(
     reset: () => {
       resetForm()
     },
+    translate: translateListVariantNameToChinese,
   }))
 
   return (
@@ -106,6 +132,7 @@ const VariantForm = forwardRef<VariantFormRef, Props>(function ProductForm(
               id={index}
               array={array}
               name={color.variantName}
+              subName={color.variantNameCn}
               code={color.variantCode}
               removeMe={removeVariant}
             />
