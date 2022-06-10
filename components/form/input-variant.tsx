@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useState, useMemo } from 'react'
 import { isEmpty } from 'lodash'
 
 type Props = {
@@ -18,12 +18,15 @@ const InputVariant: FC<Props> = ({
   const [variantCode, setVariantCode] = useState<string>('')
 
   const onAddVariant = () => {
-    if (!isEmpty(variantName) || !isEmpty(variantCode)) {
-      onAddNewvariant(variantName ?? '', variantCode ?? '')
-    }
-
+    onAddNewvariant(variantName ?? '', variantCode ?? '')
     reset()
   }
+
+  const isValid = useMemo<boolean>(() => {
+    if (isHideVariantCode) return !isEmpty(variantName)
+
+    return !isEmpty(variantName) && !isEmpty(variantCode)
+  }, [isHideVariantCode, variantCode, variantName])
 
   const reset = () => {
     setVariantName('')
@@ -73,8 +76,9 @@ const InputVariant: FC<Props> = ({
         </label>
         <button
           type="button"
-          className="mt-1 w-full justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="disabled:opacity-50 mt-1 w-full justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           onClick={onAddVariant}
+          disabled={!isValid}
         >
           Add
         </button>
