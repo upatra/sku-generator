@@ -1,57 +1,28 @@
-import React, { useRef, useMemo, useState } from 'react'
+import React, { useRef, useState, useEffect, createRef } from 'react'
 import { isEmpty } from 'lodash'
+import { v4 as uuidv4 } from 'uuid'
 
 import {
   ProductFormRef,
   VariantFormRef,
-  Variant,
-  Product,
   SkuGenerator,
-  VariantDefaultProp,
+  Property,
+  Product
 } from '@/models'
 import Layout from '@/components/layout'
 import ProductForm from '@/components/form/product-form'
 import VariantForm from '@/components/form/variant-form'
 import SkuTable from '@/components/sku-table'
-import {
-  getDefaultColors,
-  getBasicColors,
-  getDefaultSets,
-  getLargeSets,
-  getNumericSizes,
-  getRomanSizes,
-} from '@/lib/default'
+
 
 export default function Page() {
   const [listGeneratedSku, setListGeneratedSku] = useState<SkuGenerator[]>([])
   const [isTranslation, setIsTranslation] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const productRef = useRef<ProductFormRef>(null)
-  const colorRef = useRef<VariantFormRef>(null)
-  const setRef = useRef<VariantFormRef>(null)
-  const sizeRef = useRef<VariantFormRef>(null)
+  const [listProperties, setListProperties] = useState<Property[]>([])
 
-  const defaultColors = useMemo<VariantDefaultProp[]>(
-    () => [
-      { label: 'Use Basic Colors', values: getBasicColors() },
-      { label: 'Use Default Colors', values: getDefaultColors() },
-    ],
-    []
-  )
-  const defaultSets = useMemo<VariantDefaultProp[]>(
-    () => [
-      { label: 'Use Large Sets', values: getLargeSets() },
-      { label: 'Use Default Sets', values: getDefaultSets() },
-    ],
-    []
-  )
-  const defaultSizes = useMemo<VariantDefaultProp[]>(
-    () => [
-      { label: 'Use Numeric Sizes', values: getNumericSizes() },
-      { label: 'Use Default Sizes', values: getRomanSizes() },
-    ],
-    []
-  )
+  const productRef = useRef<ProductFormRef>(null)
+  const propertyRefs = useRef<VariantFormRef[]>([])
 
   const onGenerateSku = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault()
@@ -59,74 +30,100 @@ export default function Page() {
     setIsLoading(true)
     if (isTranslation) {
       if (productRef.current) await productRef.current.translate()
-      if (colorRef.current) await colorRef.current.translate()
+      if (propertyRefs.current) {
+        await Promise.all(
+          propertyRefs.current.map(async (ref: VariantFormRef) => {
+            await ref.translate()
+          })
+        )
+      }
     }
     setIsLoading(false)
 
-    const isValid = productRef.current ? productRef.current.isValid() : false
-    const product: Product | null = productRef.current
-      ? productRef.current.getProduct()
-      : null
-    const colors: Variant[] = colorRef.current
-      ? colorRef.current.getVariants()
-      : []
-    const sets: Variant[] = setRef.current ? setRef.current.getVariants() : []
-    const sizes: Variant[] = sizeRef.current
-      ? sizeRef.current.getVariants()
-      : []
+    const isProductValid = productRef.current ? productRef.current.isValid() : false
 
-    if (
-      isValid &&
-      product &&
-      colors.length > 0 &&
-      sizes.length > 0 &&
-      sizes.length > 0
-    ) {
-      const listSku: SkuGenerator[] = colors
-        .map((color: Variant) => ({
-          productName: product.productName,
-          productSku: product.productSku,
-          productNameCn: product.productNameCn,
-          colorCode: color.variantCode,
-          colorName: color.variantName,
-          colorNameCn: color.variantNameCn,
-        }))
-        .flatMap((sku: SkuGenerator) =>
-          sets.map((set: Variant) => ({
-            ...sku,
-            setName: set.variantName,
-            setCode: set.variantCode,
-          }))
-        )
-        .flatMap((sku: SkuGenerator) =>
-          sizes.map((size: Variant) => ({
-            ...sku,
-            size: size.variantName,
-          }))
-        )
-        .map((sku: SkuGenerator) => ({
-          ...sku,
-          skuByCode: generateSkuByCode(
-            sku.productName ?? '',
-            sku.productSku ?? '',
-            sku.colorCode,
-            sku.setCode,
-            sku.size
-          ),
-          skuByName: generateSkuByName(
-            sku.productName ?? '',
-            sku.productSku ?? '',
-            sku.colorName,
-            sku.setName,
-            sku.size
-          ),
-          skuChinese: isTranslation
-            ? generateSkuChinese(sku.productNameCn, sku.colorNameCn, sku.size)
-            : '',
-        }))
-
-      setListGeneratedSku(listSku)
+    let isPropertiesValid = true
+    if (propertyRefs.current) {
+      const findVariantInvalid = propertyRefs.current.find((ref) => !ref.isValid())
+      if (findVariantInvalid) {
+        isPropertiesValid = false
+      }
     }
+
+    if (isProductValid && isPropertiesValid) {
+      const product: Product | null = productRef.current
+        ? productRef.current.getProduct()
+        : null
+
+      let listGenerateProperties: Property[] = []
+
+      if (propertyRefs.current) {
+        listGenerateProperties = propertyRefs.current.map(ref => ref.getProperty())
+      }
+
+    }
+
+    
+    // const colors: Variant[] = colorRef.current
+    //   ? colorRef.current.getVariants()
+    //   : []
+    // const sets: Variant[] = setRef.current ? setRef.current.getVariants() : []
+    // const sizes: Variant[] = sizeRef.current
+    //   ? sizeRef.current.getVariants()
+    //   : []
+
+    // if (
+    //   isValid &&
+    //   product &&
+    //   colors.length > 0 &&
+    //   sizes.length > 0 &&
+    //   sizes.length > 0
+    // ) {
+    //   const listSku: SkuGenerator[] = colors
+    //     .map((color: Variant) => ({
+    //       productName: product.productName,
+    //       productSku: product.productSku,
+    //       productNameCn: product.productNameCn,
+    //       colorCode: color.variantCode,
+    //       colorName: color.variantName,
+    //       colorNameCn: color.variantNameCn,
+    //     }))
+    //     .flatMap((sku: SkuGenerator) =>
+    //       sets.map((set: Variant) => ({
+    //         ...sku,
+    //         setName: set.variantName,
+    //         setCode: set.variantCode,
+    //       }))
+    //     )
+    //     .flatMap((sku: SkuGenerator) =>
+    //       sizes.map((size: Variant) => ({
+    //         ...sku,
+    //         size: size.variantName,
+    //       }))
+    //     )
+    //     .map((sku: SkuGenerator) => ({
+    //       ...sku,
+    //       skuByCode: generateSkuByCode(
+    //         sku.productName ?? '',
+    //         sku.productSku ?? '',
+    //         sku.colorCode,
+    //         sku.setCode,
+    //         sku.size
+    //       ),
+    //       skuByName: generateSkuByName(
+    //         sku.productName ?? '',
+    //         sku.productSku ?? '',
+    //         sku.colorName,
+    //         sku.setName,
+    //         sku.size
+    //       ),
+    //       skuChinese: isTranslation
+    //         ? generateSkuChinese(sku.productNameCn, sku.colorNameCn, sku.size)
+    //         : '',
+    //     }))
+
+    //   setListGeneratedSku(listSku)
+    // }
   }
 
   const generateSkuChinese = (
@@ -199,10 +196,18 @@ export default function Page() {
     setListGeneratedSku([])
     setIsTranslation(false)
     if (productRef.current) productRef.current.reset()
-    if (colorRef.current) colorRef.current.reset()
-    if (setRef.current) setRef.current.reset()
-    if (sizeRef.current) sizeRef.current.reset()
+    setListProperties([])
   }
+
+  const onAddProperty = () => {
+    const propertyId = uuidv4()
+
+    setListProperties(prev => [...prev , { id: propertyId }])
+  }
+
+  useEffect(() => {
+    propertyRefs.current = Array(listProperties.length).fill(0).map((_, i) => propertyRefs.current[i] || createRef())
+  }, [listProperties])
 
   return (
     <Layout>
@@ -211,35 +216,24 @@ export default function Page() {
           {/* Product Basic */}
           <ProductForm ref={productRef} />
 
-          {/* Colors */}
-          <VariantForm
-            ref={colorRef}
-            defaults={defaultColors}
-            isHideVariantCode={false}
-            title="Colors"
-            inputTitleCode="Color Code"
-            inputTitleName="Color Name"
-          />
+          {/* Properties */}
 
-          {/* Sets */}
-          <VariantForm
-            ref={setRef}
-            defaults={defaultSets}
-            isHideVariantCode={false}
-            title="Sets"
-            inputTitleCode="Set Code"
-            inputTitleName="Set Name"
-          />
+          {listProperties.map((item: Property, index: number) => (
+            <VariantForm key={`${item.id} -${index}`} ref={cl => propertyRefs.current[index] = cl} />
+          ))}
 
-          {/* Size */}
-          <VariantForm
-            ref={sizeRef}
-            defaults={defaultSizes}
-            isHideVariantCode={true}
-            title="Sizes"
-            inputTitleCode=""
-            inputTitleName="Size"
-          />
+        </div>
+        <div className="pt-5 flex items-center">
+          <div className="flex justify-end">
+            <button
+              type="button"
+              className="disabled:opacity-50 mt-1 w-full justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              onClick={onAddProperty}
+            >
+              Add Property
+            </button>
+          </div>
+
         </div>
 
         <div className="pt-5 flex items-center justify-between">

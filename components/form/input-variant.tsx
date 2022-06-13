@@ -3,9 +3,9 @@ import { isEmpty } from 'lodash'
 
 type Props = {
   onAddNewvariant: (variantName: string, variantCode: string) => void
-  isHideVariantCode: boolean
-  titleName: string
-  titleCode: string
+  isHideVariantCode?: boolean
+  titleName?: string
+  titleCode?: string
 }
 
 const InputVariant: FC<Props> = ({

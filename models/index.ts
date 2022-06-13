@@ -1,7 +1,36 @@
+
+export interface Property {
+  id?: string;
+  label?: string;
+  variants?: Variant[];
+}
+
 export interface Variant {
   variantName?: string
   variantCode?: string
   variantNameCn?: string
+}
+
+export enum VariantType {
+  Colors = 0,
+  Sets,
+  Sizes,
+  Custome,
+}
+
+export interface VariantSelect {
+  label: string
+  value: VariantType
+}
+
+export interface VariantForm {
+  label: string
+  type: VariantType
+  defaults?: VariantDefaultProp[]
+  variants?: Variant[]
+  isHideVariantCode?: boolean
+  inputTitleName?: string
+  inputTitleCode?: string
 }
 
 export interface VariantDefaultProp {
@@ -38,7 +67,8 @@ export interface ProductFormRef {
 }
 
 export interface VariantFormRef {
-  getVariants: () => Variant[]
+  isValid: () => boolean
+  getProperty: () => Property
   reset: () => void
   translate: () => Promise<boolean>
 }
