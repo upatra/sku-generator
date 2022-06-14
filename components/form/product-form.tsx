@@ -58,9 +58,9 @@ const ProductForm = forwardRef<ProductFormRef>(function ProductForm(_, ref) {
     isValid: () => isValid,
     getProduct: () => {
       return {
-        productName: values.productName,
-        productSku: values.productSku,
-        productNameCn: values.productNameCn,
+        productName: values.productName.trim(),
+        productSku: values.productSku.trim(),
+        productNameCn: values.productNameCn.trim(),
       }
     },
     reset: () => {

@@ -1,19 +1,18 @@
 import React, { useRef, useState, useEffect, createRef } from 'react'
-import { isEmpty } from 'lodash'
 import { v4 as uuidv4 } from 'uuid'
+import { isEmpty } from 'lodash'
 
 import {
   ProductFormRef,
   VariantFormRef,
   SkuGenerator,
   Property,
-  Product
+  Product,
 } from '@/models'
 import Layout from '@/components/layout'
 import ProductForm from '@/components/form/product-form'
 import VariantForm from '@/components/form/variant-form'
 import SkuTable from '@/components/sku-table'
-
 
 export default function Page() {
   const [listGeneratedSku, setListGeneratedSku] = useState<SkuGenerator[]>([])
@@ -40,17 +39,11 @@ export default function Page() {
     }
     setIsLoading(false)
 
-    const isProductValid = productRef.current ? productRef.current.isValid() : false
+    const isProductValid = productRef.current
+      ? productRef.current.isValid()
+      : false
 
-    let isPropertiesValid = true
-    if (propertyRefs.current) {
-      const findVariantInvalid = propertyRefs.current.find((ref) => !ref.isValid())
-      if (findVariantInvalid) {
-        isPropertiesValid = false
-      }
-    }
-
-    if (isProductValid && isPropertiesValid) {
+    if (isProductValid) {
       const product: Product | null = productRef.current
         ? productRef.current.getProduct()
         : null
@@ -58,138 +51,103 @@ export default function Page() {
       let listGenerateProperties: Property[] = []
 
       if (propertyRefs.current) {
-        listGenerateProperties = propertyRefs.current.map(ref => ref.getProperty())
+        listGenerateProperties = propertyRefs.current
+          .filter((ref) => {
+            const isValid = ref.isValid()
+            const { variants = [] } = ref.getProperty()
+            return isValid && variants.length > 0
+          })
+          .map((ref) => ref.getProperty())
       }
 
+      if (product && listGenerateProperties.length > 0) {
+        const skuGenerator: SkuGenerator = {
+          productName: product.productName,
+          productSku: product.productSku,
+          productNameCn: product.productNameCn,
+          skuByCode: `${product.productName}_${product.productSku}_`,
+          skuByName: `${product.productName}_${product.productSku}_`,
+          skuByNameCn: `${product.productNameCn}/${product.productSku}/`,
+        }
+
+        const firstProperty = listGenerateProperties[0]
+        const { variants = [], label } = firstProperty
+
+        let listSku: SkuGenerator[] = variants.map((variant) => {
+          const newSku = { ...skuGenerator }
+          newSku[`${label} Name`] = variant.variantName
+          newSku[`${label} Code`] = variant.variantCode
+          newSku[`${label} Name Cn`] = variant.variantNameCn
+          return newSku
+        }) as SkuGenerator[]
+
+        recursiveGenerate(listSku, 1, listGenerateProperties, (results) => {
+          listSku = results
+        })
+
+        listSku = listSku.map((item: SkuGenerator) => {
+          item.skuByCode += Object.keys(item)
+            .filter(
+              (key: string) => key.includes('Code') && key !== 'skuByCode'
+            )
+            .filter((key: string) => !isEmpty(item[key]))
+            .map((key: string) => item[key])
+            .join('_')
+
+          item.skuByName += Object.keys(item)
+            .filter(
+              (key: string) =>
+                !key.includes('NameCn') &&
+                !key.includes('Name Cn') &&
+                key.includes(' Name') &&
+                key !== 'skuByName'
+            )
+            .filter((key: string) => !isEmpty(item[key]))
+            .map((key: string) => item[key])
+            .join('_')
+
+          item.skuByNameCn += Object.keys(item)
+            .filter(
+              (key: string) => key.includes('Name Cn') && key !== 'skuByNameCn'
+            )
+            .filter((key: string) => !isEmpty(item[key]))
+            .map((key: string) => item[key])
+            .join('/')
+
+          return item
+        })
+
+        console.log(listSku)
+
+        setListGeneratedSku(listSku)
+      }
     }
-
-    
-    // const colors: Variant[] = colorRef.current
-    //   ? colorRef.current.getVariants()
-    //   : []
-    // const sets: Variant[] = setRef.current ? setRef.current.getVariants() : []
-    // const sizes: Variant[] = sizeRef.current
-    //   ? sizeRef.current.getVariants()
-    //   : []
-
-    // if (
-    //   isValid &&
-    //   product &&
-    //   colors.length > 0 &&
-    //   sizes.length > 0 &&
-    //   sizes.length > 0
-    // ) {
-    //   const listSku: SkuGenerator[] = colors
-    //     .map((color: Variant) => ({
-    //       productName: product.productName,
-    //       productSku: product.productSku,
-    //       productNameCn: product.productNameCn,
-    //       colorCode: color.variantCode,
-    //       colorName: color.variantName,
-    //       colorNameCn: color.variantNameCn,
-    //     }))
-    //     .flatMap((sku: SkuGenerator) =>
-    //       sets.map((set: Variant) => ({
-    //         ...sku,
-    //         setName: set.variantName,
-    //         setCode: set.variantCode,
-    //       }))
-    //     )
-    //     .flatMap((sku: SkuGenerator) =>
-    //       sizes.map((size: Variant) => ({
-    //         ...sku,
-    //         size: size.variantName,
-    //       }))
-    //     )
-    //     .map((sku: SkuGenerator) => ({
-    //       ...sku,
-    //       skuByCode: generateSkuByCode(
-    //         sku.productName ?? '',
-    //         sku.productSku ?? '',
-    //         sku.colorCode,
-    //         sku.setCode,
-    //         sku.size
-    //       ),
-    //       skuByName: generateSkuByName(
-    //         sku.productName ?? '',
-    //         sku.productSku ?? '',
-    //         sku.colorName,
-    //         sku.setName,
-    //         sku.size
-    //       ),
-    //       skuChinese: isTranslation
-    //         ? generateSkuChinese(sku.productNameCn, sku.colorNameCn, sku.size)
-    //         : '',
-    //     }))
-
-    //   setListGeneratedSku(listSku)
-    // }
   }
 
-  const generateSkuChinese = (
-    productNameCn?: string,
-    colorNameCn?: string,
-    size?: string
+  const recursiveGenerate = (
+    listSku: SkuGenerator[],
+    index: number,
+    properties: Property[],
+    onCallBack: (results: SkuGenerator[]) => void
   ) => {
-    let skuChinese = `${productNameCn}`
+    if (index < properties.length) {
+      const property = properties[index]
+      const { variants = [], label } = property
 
-    if (!isEmpty(colorNameCn)) {
-      skuChinese = skuChinese.concat(` / ${colorNameCn}`)
+      listSku = listSku.flatMap((sku) =>
+        variants.map((variant) => {
+          const newSku = { ...sku }
+          newSku[`${label} Name`] = variant.variantName
+          newSku[`${label} Code`] = variant.variantCode
+          newSku[`${label} Name Cn`] = variant.variantNameCn
+          return newSku
+        })
+      )
+
+      onCallBack(listSku)
+
+      recursiveGenerate(listSku, index + 1, properties, onCallBack)
     }
-
-    if (!isEmpty(size)) {
-      skuChinese = skuChinese.concat(` / ${size}`)
-    }
-
-    return skuChinese
-  }
-
-  const generateSkuByCode = (
-    productName: string,
-    productSku: string,
-    colorCode?: string,
-    setCode?: string,
-    size?: string
-  ) => {
-    let skuByCode = `${productName}_${productSku}`
-
-    if (!isEmpty(colorCode)) {
-      skuByCode = skuByCode.concat(`_${colorCode}`)
-    }
-
-    if (!isEmpty(setCode)) {
-      skuByCode = skuByCode.concat(`_${setCode}`)
-    }
-
-    if (!isEmpty(size)) {
-      skuByCode = skuByCode.concat(`_${size}`)
-    }
-
-    return skuByCode
-  }
-
-  const generateSkuByName = (
-    productName: string,
-    productSku: string,
-    colorName?: string,
-    setName?: string,
-    size?: string
-  ) => {
-    let skuByName = `${productName}_${productSku}`
-
-    if (!isEmpty(colorName)) {
-      skuByName = skuByName.concat(`_${colorName}`)
-    }
-
-    if (!isEmpty(setName)) {
-      skuByName = skuByName.concat(`_${setName}`)
-    }
-
-    if (!isEmpty(size)) {
-      skuByName = skuByName.concat(`_${size}`)
-    }
-
-    return skuByName
   }
 
   const onReset = () => {
@@ -202,11 +160,13 @@ export default function Page() {
   const onAddProperty = () => {
     const propertyId = uuidv4()
 
-    setListProperties(prev => [...prev , { id: propertyId }])
+    setListProperties((prev) => [...prev, { id: propertyId }])
   }
 
   useEffect(() => {
-    propertyRefs.current = Array(listProperties.length).fill(0).map((_, i) => propertyRefs.current[i] || createRef())
+    propertyRefs.current = Array(listProperties.length)
+      .fill(0)
+      .map((_, i) => propertyRefs.current[i] || createRef())
   }, [listProperties])
 
   return (
@@ -219,9 +179,15 @@ export default function Page() {
           {/* Properties */}
 
           {listProperties.map((item: Property, index: number) => (
-            <VariantForm key={`${item.id} -${index}`} ref={cl => propertyRefs.current[index] = cl} />
+            <VariantForm
+              key={`${item.id} -${index}`}
+              ref={(cl) => {
+                if (cl) {
+                  propertyRefs.current[index] = cl
+                }
+              }}
+            />
           ))}
-
         </div>
         <div className="pt-5 flex items-center">
           <div className="flex justify-end">
@@ -233,7 +199,6 @@ export default function Page() {
               Add Property
             </button>
           </div>
-
         </div>
 
         <div className="pt-5 flex items-center justify-between">
@@ -297,8 +262,9 @@ export default function Page() {
             </button>
           </div>
         </div>
-
-        <SkuTable data={listGeneratedSku} isTranslation={isTranslation} />
+        {listGeneratedSku.length > 0 && (
+          <SkuTable data={listGeneratedSku} isTranslation={isTranslation} />
+        )}
       </div>
     </Layout>
   )

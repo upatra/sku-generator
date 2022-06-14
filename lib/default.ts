@@ -209,6 +209,7 @@ export const getNumericSizes = (): Variant[] => {
   for (let i = 0; i < names.length; i++) {
     result.push({
       variantName: names[i],
+      variantCode: names[i],
     })
   }
   return result
@@ -221,6 +222,7 @@ export const getRomanSizes = (): Variant[] => {
   for (let i = 0; i < names.length; i++) {
     result.push({
       variantName: names[i],
+      variantCode: names[i],
     })
   }
   return result

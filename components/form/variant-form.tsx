@@ -1,9 +1,21 @@
-import React, { forwardRef, useImperativeHandle, useMemo, useEffect } from 'react'
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useEffect,
+} from 'react'
 import { useFormik } from 'formik'
 import { uniqBy, pick } from 'lodash'
 
 import { translateToChinese } from 'lib'
-import { VariantFormRef, Variant, VariantDefaultProp, VariantType, VariantSelect, VariantForm } from 'models'
+import {
+  VariantFormRef,
+  Variant,
+  VariantDefaultProp,
+  VariantType,
+  VariantSelect,
+  VariantForm,
+} from 'models'
 import Badge from '@/components/badge'
 import {
   getDefaultColors,
@@ -18,7 +30,6 @@ import InputVariant from './input-variant'
 import { VariantFormSchema } from './schema'
 
 const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
-
   const formik = useFormik<VariantForm>({
     initialValues: {
       label: '',
@@ -27,7 +38,7 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
       variants: [],
       isHideVariantCode: false,
       inputTitleName: 'Variant Name',
-      inputTitleCode: 'Variant Code'
+      inputTitleCode: 'Variant Code',
     },
     initialTouched: {
       label: true,
@@ -38,29 +49,49 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
     },
   })
 
-  const { values, handleSubmit, setFieldValue, resetForm, getFieldProps, errors, touched, isValid, setValues} = formik
+  const {
+    values,
+    handleSubmit,
+    setFieldValue,
+    resetForm,
+    getFieldProps,
+    errors,
+    touched,
+    isValid,
+    setValues,
+  } = formik
 
-  const { label, type, defaults = [], variants = [], isHideVariantCode, inputTitleName, inputTitleCode} = values
+  const {
+    label,
+    type,
+    defaults = [],
+    variants = [],
+    isHideVariantCode,
+    inputTitleName,
+    inputTitleCode,
+  } = values
 
-  const listVarianTypes = useMemo<VariantSelect[]>(() => [
-    {
-      label: 'Colors',
-      value: VariantType.Colors
-    },
-    {
-      label: 'Sets',
-      value: VariantType.Sets
-    },
-    {
-      label: 'Sizes',
-      value: VariantType.Sizes
-    },
-    {
-      label: 'Custome',
-      value: VariantType.Custome
-    },
-  ], [])
-
+  const listVarianTypes = useMemo<VariantSelect[]>(
+    () => [
+      {
+        label: 'Colors',
+        value: VariantType.Colors,
+      },
+      {
+        label: 'Sets',
+        value: VariantType.Sets,
+      },
+      {
+        label: 'Sizes',
+        value: VariantType.Sizes,
+      },
+      {
+        label: 'Custome',
+        value: VariantType.Custome,
+      },
+    ],
+    []
+  )
 
   const defaultColors = useMemo<VariantDefaultProp[]>(
     () => [
@@ -102,7 +133,10 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
   }
 
   const addCustomVariant = (variantName: string, variantCode: string) => {
-    const newVariants = [...variants, { variantName, variantCode }]
+    const newVariants = [
+      ...variants,
+      { variantName: variantName.trim(), variantCode: variantCode.trim() },
+    ]
     onUpdateVariants(newVariants)
   }
 
@@ -142,7 +176,7 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
     getProperty: () => {
       return {
         label,
-        variants
+        variants,
       }
     },
     reset: () => {
@@ -161,9 +195,9 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
           variants: [],
           isHideVariantCode: false,
           inputTitleName: 'Variant Name',
-          inputTitleCode: 'Variant Code'
+          inputTitleCode: 'Variant Code',
         })
-        break;
+        break
       case VariantType.Colors:
         setValues({
           label: 'Colors',
@@ -172,9 +206,9 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
           variants: [],
           isHideVariantCode: false,
           inputTitleName: 'Color Name',
-          inputTitleCode: 'Color Code'
+          inputTitleCode: 'Color Code',
         })
-        break;
+        break
       case VariantType.Sets:
         setValues({
           label: 'Sets',
@@ -183,9 +217,9 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
           variants: [],
           isHideVariantCode: false,
           inputTitleName: 'Set Name',
-          inputTitleCode: 'Set Code'
+          inputTitleCode: 'Set Code',
         })
-        break;
+        break
       case VariantType.Sizes:
         setValues({
           label: 'Sizes',
@@ -194,9 +228,9 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
           variants: [],
           isHideVariantCode: true,
           inputTitleName: 'Size Name',
-          inputTitleCode: 'Size Code'
+          inputTitleCode: 'Size Code',
         })
-        break;
+        break
     }
   }, [type])
 
@@ -205,7 +239,10 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
       <div className="pt-8">
         <div className="flex items-end justify-between">
           <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="location"
+              className="block text-sm font-medium text-gray-700"
+            >
               Type
             </label>
             <select
@@ -213,10 +250,14 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
               name="location"
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
               defaultValue={type}
-              onChange={(e) => setFieldValue('type', parseInt(e.target.value, 10))}
+              onChange={(e) =>
+                setFieldValue('type', parseInt(e.target.value, 10))
+              }
             >
               {listVarianTypes.map((item, index) => (
-                <option key={`${item.value}-${index}`} value={item.value}>{item.label}</option>
+                <option key={`${item.value}-${index}`} value={item.value}>
+                  {item.label}
+                </option>
               ))}
             </select>
           </div>
@@ -260,9 +301,7 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
                 {...getFieldProps('label')}
               />
               {touched.label && errors.label && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.label}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{errors.label}</p>
               )}
             </div>
           </div>
@@ -276,14 +315,14 @@ const VariantForm = forwardRef<VariantFormRef>(function ProductForm(_, ref) {
         />
 
         <div className="mt-6">
-          {variants.map((color: Variant, index, array) => (
+          {variants.map((variant: Variant, index, array) => (
             <Badge
               key={index}
               id={index}
               array={array}
-              name={color.variantName}
-              subName={color.variantNameCn}
-              code={color.variantCode}
+              name={variant.variantName}
+              subName={variant.variantNameCn}
+              code={isHideVariantCode ? '' : variant.variantCode}
               removeMe={removeVariant}
             />
           ))}

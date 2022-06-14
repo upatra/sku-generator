@@ -9,3 +9,8 @@ export const truncate = (str: string, num: number) => {
   }
   return str.slice(0, num) + '...'
 }
+
+export const camelcase = (s: string) => {
+  if (typeof s !== 'string') return ''
+  return s.charAt(0).toLowerCase() + s.slice(1)
+}

@@ -18,7 +18,7 @@ const InputVariant: FC<Props> = ({
   const [variantCode, setVariantCode] = useState<string>('')
 
   const onAddVariant = () => {
-    onAddNewvariant(variantName ?? '', variantCode ?? '')
+    onAddNewvariant(variantName, isHideVariantCode ? variantName : variantCode)
     reset()
   }
 

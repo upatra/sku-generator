@@ -1,8 +1,7 @@
-
 export interface Property {
-  id?: string;
-  label?: string;
-  variants?: Variant[];
+  id?: string
+  label?: string
+  variants?: Variant[]
 }
 
 export interface Variant {
@@ -38,19 +37,17 @@ export interface VariantDefaultProp {
   values: Variant[]
 }
 
-export interface SkuGenerator {
+interface BaseObject {
+  [key: string]: unknown | unknown[] | undefined
+}
+
+export interface SkuGenerator extends BaseObject {
   productName?: string
   productNameCn?: string
   productSku?: string
   skuByCode?: string
   skuByName?: string
-  skuChinese?: string
-  colorName?: string
-  colorCode?: string
-  colorNameCn?: string
-  setName?: string
-  setCode?: string
-  size?: string
+  skuByNameCn?: string
 }
 
 export interface Product {
