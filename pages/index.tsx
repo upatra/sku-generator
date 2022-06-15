@@ -24,7 +24,7 @@ import {
 
 export default function Page() {
   const [listGeneratedSku, setListGeneratedSku] = useState<SkuGenerator[]>([])
-  const [isTranslation, setIsTranslation] = useState<boolean>(false)
+  const [isTranslation, setIsTranslation] = useState<boolean>(true)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const productRef = useRef<ProductFormRef>(null)
   const colorRef = useRef<VariantFormRef>(null)
@@ -75,15 +75,11 @@ export default function Page() {
       ? sizeRef.current.getVariants()
       : []
 
-    if (
-      isValid &&
-      product &&
-      colors.length > 0 &&
-      sizes.length > 0 &&
-      sizes.length > 0
-    ) {
-      const listSku: SkuGenerator[] = colors
-        .map((color: Variant) => ({
+    if (isValid && product) {
+      let listSku: SkuGenerator[] = []
+
+      if (colors.length > 0) {
+        listSku = colors.map((color: Variant) => ({
           productName: product.productName,
           productSku: product.productSku,
           productNameCn: product.productNameCn,
@@ -91,39 +87,72 @@ export default function Page() {
           colorName: color.variantName,
           colorNameCn: color.variantNameCn,
         }))
-        .flatMap((sku: SkuGenerator) =>
-          sets.map((set: Variant) => ({
-            ...sku,
+      }
+
+      if (sets.length > 0) {
+        if (listSku.length > 0) {
+          listSku = listSku.flatMap((sku: SkuGenerator) =>
+            sets.map((set: Variant) => ({
+              ...sku,
+              productName: product.productName,
+              productSku: product.productSku,
+              productNameCn: product.productNameCn,
+              setName: set.variantName,
+              setCode: set.variantCode,
+            }))
+          )
+        } else {
+          listSku = sets.map((set: Variant) => ({
+            productName: product.productName,
+            productSku: product.productSku,
+            productNameCn: product.productNameCn,
             setName: set.variantName,
             setCode: set.variantCode,
           }))
-        )
-        .flatMap((sku: SkuGenerator) =>
-          sizes.map((size: Variant) => ({
-            ...sku,
+        }
+      }
+
+      if (sizes.length > 0) {
+        if (listSku.length > 0) {
+          listSku = listSku.flatMap((sku: SkuGenerator) =>
+            sizes.map((size: Variant) => ({
+              ...sku,
+              productName: product.productName,
+              productSku: product.productSku,
+              productNameCn: product.productNameCn,
+              size: size.variantName,
+            }))
+          )
+        } else {
+          listSku = sizes.map((size: Variant) => ({
+            productName: product.productName,
+            productSku: product.productSku,
+            productNameCn: product.productNameCn,
             size: size.variantName,
           }))
-        )
-        .map((sku: SkuGenerator) => ({
-          ...sku,
-          skuByCode: generateSkuByCode(
-            sku.productName ?? '',
-            sku.productSku ?? '',
-            sku.colorCode,
-            sku.setCode,
-            sku.size
-          ),
-          skuByName: generateSkuByName(
-            sku.productName ?? '',
-            sku.productSku ?? '',
-            sku.colorName,
-            sku.setName,
-            sku.size
-          ),
-          skuChinese: isTranslation
-            ? generateSkuChinese(sku.productNameCn, sku.colorNameCn, sku.size)
-            : '',
-        }))
+        }
+      }
+
+      listSku = listSku.map((sku: SkuGenerator) => ({
+        ...sku,
+        skuByCode: generateSkuByCode(
+          sku.productName ?? '',
+          sku.productSku ?? '',
+          sku.colorCode,
+          sku.setCode,
+          sku.size
+        ),
+        skuByName: generateSkuByName(
+          sku.productName ?? '',
+          sku.productSku ?? '',
+          sku.colorName,
+          sku.setName,
+          sku.size
+        ),
+        skuChinese: isTranslation
+          ? generateSkuChinese(sku.productNameCn, sku.colorNameCn, sku.size)
+          : '',
+      }))
 
       setListGeneratedSku(listSku)
     }
@@ -154,7 +183,7 @@ export default function Page() {
     setCode?: string,
     size?: string
   ) => {
-    let skuByCode = `${productName}_${productSku}`
+    let skuByCode = `${productSku}`
 
     if (!isEmpty(colorCode)) {
       skuByCode = skuByCode.concat(`_${colorCode}`)
@@ -178,18 +207,18 @@ export default function Page() {
     setName?: string,
     size?: string
   ) => {
-    let skuByName = `${productName}_${productSku}`
+    let skuByName = `${productName}`
 
     if (!isEmpty(colorName)) {
-      skuByName = skuByName.concat(`_${colorName}`)
+      skuByName = skuByName.concat(` / ${colorName}`)
     }
 
     if (!isEmpty(setName)) {
-      skuByName = skuByName.concat(`_${setName}`)
+      skuByName = skuByName.concat(` / ${setName}`)
     }
 
     if (!isEmpty(size)) {
-      skuByName = skuByName.concat(`_${size}`)
+      skuByName = skuByName.concat(` / ${size}`)
     }
 
     return skuByName
@@ -197,7 +226,7 @@ export default function Page() {
 
   const onReset = () => {
     setListGeneratedSku([])
-    setIsTranslation(false)
+    setIsTranslation(true)
     if (productRef.current) productRef.current.reset()
     if (colorRef.current) colorRef.current.reset()
     if (setRef.current) setRef.current.reset()
@@ -248,6 +277,7 @@ export default function Page() {
               <input
                 type="checkbox"
                 className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                checked
                 onChange={(e) => setIsTranslation(e.target.checked)}
               />
             </div>
